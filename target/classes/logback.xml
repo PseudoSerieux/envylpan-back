@@ -1,0 +1,10 @@
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <logger name="com.example.envyplan.controller.LoginController" level="DEBUG"/>
+    <logger name="com.example.envyplan.service.AuthService" level="DEBUG"/>
+    <logger name="com.example.envyplan.service.CustomUserDetailsService" level="DEBUG"/>
+
+    <!-- Autres configurations de journalisation -->
+
+</configuration>
