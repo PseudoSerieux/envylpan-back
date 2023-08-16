@@ -50,27 +50,6 @@
             return passwordEncoder.matches(password, user.getPassword());
         }
 
-        public String generateToken(String username) {
-            long expirationTime = Long.parseLong(System.currentTimeMillis() + keyExpiration); // jwtExpiration is the expiration time of the token
-
-            return Jwts.builder()
-                    .setSubject(username)
-                    .setExpiration(new Date(expirationTime))
-                    .signWith(SignatureAlgorithm.HS512, secretKey)
-                    .compact();
-        }
-
-        public User createUser(User user) {
-            // Assurez-vous que le mot de passe est encodé avant de le stocker dans la base de données
-            String encodedPassword = passwordEncoder.encode(user.getPassword());
-            user.setPassword(encodedPassword);
-
-            return userRepository.save(user);
-        }
-
-        public Role findRoleByRoleName(String roleName) {
-            return roleRepository.findByRoleName(roleName);
-        }
 */
         public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
             User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)

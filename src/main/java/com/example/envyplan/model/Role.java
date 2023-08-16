@@ -2,7 +2,6 @@ package com.example.envyplan.model;
 
 import jakarta.persistence.*;
 
-
 @Entity
 public class Role {
 
