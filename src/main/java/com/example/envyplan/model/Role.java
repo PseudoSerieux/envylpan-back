@@ -2,6 +2,8 @@ package com.example.envyplan.model;
 
 import jakarta.persistence.*;
 
+import java.util.Set;
+
 @Entity
 public class Role {
 
@@ -14,6 +16,13 @@ public class Role {
 
     @Column(name = "role_name", length = 65, nullable = false)
     private String roleName;
+    public Role(){
+
+    }
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Set<Role> roles;
 
     public static final int ROLE_ADMIN = 1;
     public static final int ROLE_USER = 2;

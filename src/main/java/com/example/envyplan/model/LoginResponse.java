@@ -3,8 +3,7 @@ package com.example.envyplan.model;
 public class LoginResponse {
     private boolean success;
 
-    public LoginResponse(boolean success, String token) {
-        this.success = success;
+    public LoginResponse(String token) {
         this.token = token;
     }
 

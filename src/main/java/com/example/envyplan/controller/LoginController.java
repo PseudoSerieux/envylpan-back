@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,7 +27,6 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api")
-
 public class LoginController {
 
     @Autowired
@@ -51,12 +51,12 @@ public class LoginController {
     private String secretKey;
 
     @PostMapping(value = "/inscription")
-    public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto) {
+    public ResponseEntity<?> postRegisterUser(@RequestBody SignUpDto signUpDto) {
         //premier user crée : abcd mdp : ABCDabcd
         // Check if the username already exists
         Boolean userByUsername = userRepository.existsByUsername(signUpDto.getUsername());
         if (userByUsername) {
-            return new ResponseEntity<>("Ce pseudo existe déjà !", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Ce pseudo existe déjà :(", HttpStatus.BAD_REQUEST);
         }
 
         // Check if the email already exists
@@ -86,24 +86,25 @@ public class LoginController {
 
         return new ResponseEntity<>(token,HttpStatus.OK);
     }
-/*2023-08-15T19:20:31.398+02:00 DEBUG 6596 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.example.envyplan.controller.LoginController#registerUser(SignUpDto)
-2023-08-15T19:20:31.398+02:00 DEBUG 6596 --- [nio-8080-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.example.envyplan.controller.LoginController#registerUser(SignUpDto)
-2023-08-15T19:20:31.400+02:00 DEBUG 6596 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
-2023-08-15T19:20:31.401+02:00 DEBUG 6596 --- [nio-8080-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)*/
-    @PostMapping("/connexion")
-    public ResponseEntity<String> login(@RequestBody @NotNull LoginDto loginDto) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginDto.getUsername(), loginDto.getPassword()));
 
+    @PostMapping(value = "/connexion", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<LoginResponse> postLogin(@RequestBody LoginDto loginDto) {
+
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginDto.getEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // Get the token from the AuthService
-        String token = jwtUtil.generateToken(loginDto.getUsername());
-
-        // Return the token
-        return new ResponseEntity<>(token, HttpStatus.OK);
-
-        // OU : return new ResponseEntity<>("L'utilisateur a réussi à se connecter !.", HttpStatus.OK);
+        String token = jwtUtil.generateToken(loginDto.getEmail());
+        LoginResponse response = new LoginResponse(token);
+        if (token != null) {
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    // OU : return new ResponseEntity<>("L'utilisateur a réussi à se connecter !.", HttpStatus.OK);
 /*        String username = request.getUsername();
         String password = request.getPassword();
 
@@ -116,6 +117,4 @@ public class LoginController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse(false, "Utilisateur introuvable ou mot de passe incorrect"));
         }*/
-    }
-
 }
