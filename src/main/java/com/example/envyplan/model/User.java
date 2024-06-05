@@ -22,10 +22,6 @@ public class User {
     @Column(name = "password", length = 255, nullable = false)
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role role;
-
     @Column(name = "date_creation")
     private LocalDateTime dateCreation;
 
@@ -63,13 +59,5 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
     }
 }

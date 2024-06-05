@@ -1,5 +1,4 @@
 com\example\envyplan\config\JwtAuthenticationFilter.class
-com\example\envyplan\repository\RoleRepository.class
 com\example\envyplan\util\JwtUtil.class
 com\example\envyplan\EnvylpanApplication.class
 com\example\envyplan\config\CorsFilter.class
@@ -8,7 +7,6 @@ com\example\envyplan\payload\SignUpDto.class
 com\example\envyplan\model\LoginRequest.class
 com\example\envyplan\model\User.class
 com\example\envyplan\config\SecretKeyGenerator.class
-com\example\envyplan\model\Role.class
 com\example\envyplan\payload\LoginDto.class
 com\example\envyplan\service\AuthService.class
 com\example\envyplan\config\SecurityConfig.class
