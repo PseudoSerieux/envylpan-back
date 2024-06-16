@@ -2,8 +2,8 @@ package com.example.envyplan.controller;
 
 import com.example.envyplan.model.LoginResponse;
 import com.example.envyplan.model.User;
-import com.example.envyplan.payload.LoginDto;
-import com.example.envyplan.payload.SignUpDto;
+import com.example.envyplan.dto.LoginDto;
+import com.example.envyplan.dto.SignUpDto;
 import com.example.envyplan.repository.UserRepository;
 import com.example.envyplan.service.AuthService;
 import com.example.envyplan.util.JwtUtil;
@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -44,22 +45,26 @@ public class LoginController {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    @PostMapping(value = "/inscription")
+    @PostMapping(value = "/inscription", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> postRegisterUser(@RequestBody SignUpDto signUpDto) {
         //premier user crée : abcd mdp : ABCDabcd
-        // Check if the username already exists
+        // Check si username existe déjà
         Boolean userByUsername = userRepository.existsByUsername(signUpDto.getUsername());
         if (userByUsername) {
-            return new ResponseEntity<>("Ce pseudo existe déjà :(", HttpStatus.BAD_REQUEST);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Ce pseudo existe déjà :("));
         }
 
-        // Check if the email already exists
+        // Check si email existe déjà
         Boolean userByEmail = userRepository.existsByEmail(signUpDto.getEmail());
         if (userByEmail) {
-            return new ResponseEntity<>("Cet email est déjà utilisé !", HttpStatus.BAD_REQUEST);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Cet email est déjà utilisé !"));
         }
 
-        // Create a new user object
+        // Création du l'utilisateur
         User user = new User();
         user.setUsername(signUpDto.getUsername());
         user.setEmail(signUpDto.getEmail());
@@ -71,7 +76,7 @@ public class LoginController {
 
         String token = jwtUtil.generateToken(user.getUsername());
 
-        return new ResponseEntity<>(token,HttpStatus.OK);
+        return ResponseEntity.ok(Map.of("token", token));
     }
 
     @PostMapping(value = "/connexion", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -82,11 +87,13 @@ public class LoginController {
                 loginDto.getEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Get the token from the AuthService
+        // Récupération du token de AuthService
         String token = jwtUtil.generateToken(loginDto.getEmail());
+
         LoginResponse response = new LoginResponse(token);
+
         if (token != null) {
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+            return ResponseEntity.ok().body(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }

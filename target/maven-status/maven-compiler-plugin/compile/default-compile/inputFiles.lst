@@ -3,13 +3,13 @@ C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\en
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\config\SecretKeyGenerator.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\util\JwtUtil.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\model\LoginResponse.java
+C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\dto\SignUpDto.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\controller\LoginController.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\config\SecurityConfig.java
+C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\dto\LoginDto.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\config\JwtAuthenticationFilter.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\model\User.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\EnvylpanApplication.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\config\CorsFilter.java
-C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\payload\LoginDto.java
-C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\payload\SignUpDto.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\service\AuthService.java
 C:\Users\Margaux\Desktop\ANK\EnvyPlan\envyplan-back\src\main\java\com\example\envyplan\repository\UserRepository.java
