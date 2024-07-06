@@ -82,7 +82,6 @@ public class LoginController {
     @PostMapping(value = "/connexion", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<LoginResponse> postLogin(@RequestBody LoginDto loginDto) {
-
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 loginDto.getEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -93,6 +92,7 @@ public class LoginController {
         LoginResponse response = new LoginResponse(token);
 
         if (token != null) {
+            System.out.println("AAAAAAAAA B " +  SecurityContextHolder.getContext().getAuthentication());
             return ResponseEntity.ok().body(response);
         } else {
             return ResponseEntity.badRequest().body(response);
