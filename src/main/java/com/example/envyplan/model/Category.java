@@ -1,18 +1,18 @@
 package com.example.envyplan.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
-@Getter
-@Setter
+
+@Data
 @Entity
 public class Category {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name", length = 65, nullable = false, unique = true)
@@ -27,7 +27,6 @@ public class Category {
     @Column(name = "date_category_end")
     private LocalDateTime dateCategoryEnd;
 
-    //voir pour images
     @Column(name = "image")
     private String banniere;
 
@@ -35,7 +34,6 @@ public class Category {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "envyList", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Envy> envyList;
-
 }

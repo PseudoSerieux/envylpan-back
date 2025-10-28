@@ -1,16 +1,20 @@
 package com.example.envyplan.model;
 
 import jakarta.persistence.*;
-
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-public class User {
+@Getter
+@Setter
+public class User extends PanacheEntityBase {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -26,10 +30,10 @@ public class User {
     @Column(name = "date_creation")
     private LocalDateTime dateCreation;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Category> category;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "envy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Envy> envy;
 
     // Getters and setters

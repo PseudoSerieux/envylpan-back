@@ -2,35 +2,29 @@
 
     import com.example.envyplan.model.User;
     import com.example.envyplan.repository.UserRepository;
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.beans.factory.annotation.Value;
-    import org.springframework.security.core.userdetails.UserDetails;
-    import org.springframework.security.core.userdetails.UserDetailsService;
-    import org.springframework.security.core.userdetails.UsernameNotFoundException;
-    import org.springframework.security.crypto.password.PasswordEncoder;
-    import org.springframework.stereotype.Service;
+    import jakarta.enterprise.context.ApplicationScoped;
+    import jakarta.inject.Inject;
+    import org.eclipse.microprofile.config.inject.ConfigProperty;
 
     import static java.util.Collections.emptyList;
 
-    @Service("userService")
+    @ApplicationScoped
     public class AuthService implements UserDetailsService {
 
-        @Autowired
+        @Inject
         private UserRepository userRepository;
 
-        @Autowired
-        private PasswordEncoder passwordEncoder;
+        @ConfigProperty(name = "jwt.secret")
+        String secretKey;
 
-        @Value("${jwt.secret}")
-        private String secretKey;
+        @ConfigProperty(name = "jwt.expiration")
+        String keyExpiration;
 
-        @Value("${jwt.expiration}")
-        private String keyExpiration;
-
-        public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        @Override
+        public UserDetails loadUserByUsername(String usernameOrEmail) {
             User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                     .orElseThrow(() ->
-                            new UsernameNotFoundException("User not found with username or email: "+ usernameOrEmail));
+                            new RuntimeException("User not found with username or email: " + usernameOrEmail));
 
             return new org.springframework.security.core.userdetails.User(user.getEmail(),
                     user.getPassword(),

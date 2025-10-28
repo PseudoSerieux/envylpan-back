@@ -1,5 +1,6 @@
 package com.example.envyplan.controller;
 
+import com.example.envyplan.configuration.SecurityConfig;
 import com.example.envyplan.dto.CategoryDto;
 import com.example.envyplan.model.Category;
 import com.example.envyplan.model.User;
@@ -7,66 +8,66 @@ import com.example.envyplan.repository.CategoryRepository;
 import com.example.envyplan.repository.UserRepository;
 import com.example.envyplan.service.AuthService;
 import com.example.envyplan.util.JwtUtil;
-import org.hibernate.annotations.Any;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.Map;
-import java.util.Optional;
 
-
-@RestController
-@RequestMapping("/category")
+@Path("/category")
 public class CategoryController {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    @Inject
+    JwtUtil jwtUtil;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    @Inject
+    SecurityConfig securityConfig;
 
-    @Autowired
-    private AuthService authService;
+    @Inject
+    AuthService authService;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Inject
+    UserRepository userRepository;
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    @Inject
+    CategoryRepository categoryRepository;
 
-    // Récupérez la clé secrète à partir du fichier de propriétés
-    @Value("${jwt.secret}")
-    private String secretKey;
+    @POST
+    @Path("/create")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createCategory(CategoryDto categoryDto) {
+        try {
+            // Récupérer le nom d'utilisateur depuis le JWT
+            String kk = jwtUtil.getCurrentUsername();
 
-    @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createCategory(@RequestBody CategoryDto categoryDto) {
-        System.out.println("zajriza " +  SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        //Récupérer un utilisateur (email) depuis le token localstorage du front
-        System.out.println("YO TOUS LE MONDE C SQUIZI " +  SecurityContextHolder.getContext().getAuthentication());
-        String kk = jwtUtil.getCurrentUsername();
-        System.out.println("YO TOUS LE MONDE C LE KK " + kk);
+            // Décoder le token si nécessaire (adapter selon votre implémentation)
+            securityConfig.jwtDecoder().decode(kk);
 
-        //En gros après avoir réussi à récupérer ce foutu nom, il va falloir retrouver l'User
-        User user = userRepository.findByUsername(kk);
+            // Récupérer l'utilisateur
+            User user = userRepository.findByUsername(kk);
 
+            // Création de la catégorie
+            Category category = new Category();
+            category.setBanniere(categoryDto.getBanniere());
+            category.setNameCategory(categoryDto.getNameCategory());
+            category.setPlaceCategory(categoryDto.getPlaceCategory());
+            category.setDateCategoryStart(categoryDto.getDateCategoryStart());
+            category.setDateCategoryEnd(categoryDto.getDateCategoryEnd());
+            category.setOwner(user);
 
-        //Création de la catégorie
-        Category category = new Category();
-        category.setBanniere(categoryDto.getBanniere());
-        category.setNameCategory(categoryDto.getNameCategory());
-        category.setPlaceCategory(categoryDto.getPlaceCategory());
-        category.setDateCategoryStart(categoryDto.getDateCategoryStart());
-        category.setDateCategoryEnd(categoryDto.getDateCategoryEnd());
-        category.setOwner(user);
+            // Sauvegarder la catégorie
+            categoryRepository.save(category);
 
-        // Save the category to the database
-        categoryRepository.save(category);
-
-        return ResponseEntity.ok("c'est ok");
+            return Response.ok(Map.of("message", "c'est ok")).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("Erreur interne", e.getMessage()))
+                    .build();
+        }
     }
 }

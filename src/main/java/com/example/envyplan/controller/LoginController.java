@@ -1,101 +1,50 @@
 package com.example.envyplan.controller;
 
 import com.example.envyplan.model.LoginResponse;
-import com.example.envyplan.model.User;
 import com.example.envyplan.dto.LoginDto;
 import com.example.envyplan.dto.SignUpDto;
 import com.example.envyplan.repository.UserRepository;
 import com.example.envyplan.service.AuthService;
+import com.example.envyplan.service.UserService;
 import com.example.envyplan.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.Config;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
-@RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class LoginController {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    @Inject
+    JwtUtil jwtUtil;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    @Inject
+    AuthService authService;
 
-    @Autowired
-    private AuthService authService;
+    @Inject
+    UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Inject
+    UserService userService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Inject
+    Instance<Config> config;
 
-    // Récupérez la clé secrète à partir du fichier de propriétés
-    @Value("${jwt.secret}")
-    private String secretKey;
-
-    @PostMapping(value = "/inscription", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> postRegisterUser(@RequestBody SignUpDto signUpDto) {
-        //premier user crée : abcd mdp : ABCDabcd
-        // Check si username existe déjà
-        Boolean userByUsername = userRepository.existsByUsername(signUpDto.getUsername());
-        if (userByUsername) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "Ce pseudo existe déjà :("));
-        }
-
-        // Check si email existe déjà
-        Boolean userByEmail = userRepository.existsByEmail(signUpDto.getEmail());
-        if (userByEmail) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "Cet email est déjà utilisé !"));
-        }
-
-        // Création du l'utilisateur
-        User user = new User();
-        user.setUsername(signUpDto.getUsername());
-        user.setEmail(signUpDto.getEmail());
-        user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
-        user.setDateCreation(LocalDateTime.now());
-
-        // Save the user to the database
-        userRepository.save(user);
-
-        String token = jwtUtil.generateToken(user.getUsername());
-
-        return ResponseEntity.ok(Map.of("token", token));
+    @POST
+    @Path("/inscription")
+    public Response postRegisterUser(SignUpDto signUpDto) {
+        return userService.saveUser(signUpDto);
     }
 
-    @PostMapping(value = "/connexion", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<LoginResponse> postLogin(@RequestBody LoginDto loginDto) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginDto.getEmail(), loginDto.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Récupération du token de AuthService
-        String token = jwtUtil.generateToken(loginDto.getEmail());
-
-        LoginResponse response = new LoginResponse(token);
-
-        if (token != null) {
-            System.out.println("AAAAAAAAA B " +  SecurityContextHolder.getContext().getAuthentication());
-            return ResponseEntity.ok().body(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    @POST
+    @Path("/connexion")
+    public Response postLogin(LoginDto loginDto) {
+        return userService.signInUser(loginDto);
     }
 }

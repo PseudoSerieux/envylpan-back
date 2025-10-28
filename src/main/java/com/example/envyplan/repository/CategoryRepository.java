@@ -1,11 +1,14 @@
 package com.example.envyplan.repository;
 
 import com.example.envyplan.model.Category;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.Optional;
-@Repository
-public interface CategoryRepository extends JpaRepository<Category, Long> {
-    Optional<Category> findById(String id);
+
+@ApplicationScoped
+public class CategoryRepository implements PanacheRepository<Category> {
+    public Optional<Category> findById(String id) {
+        return find("id", id).firstResultOptional();
+    }
 }

@@ -1,72 +1,80 @@
 package com.example.envyplan.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
+import io.smallrye.jwt.build.Jwt;
+import io.smallrye.jwt.build.JwtClaimsBuilder;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
+import java.time.Instant;
 import java.util.Date;
 
-@Component
+@ApplicationScoped
 public class JwtUtil {
 
-    @Value("${jwt.secret}") // Assurez-vous que vous avez configuré la clé secrète dans votre fichier application.properties
-    private String secretKey;
+    @ConfigProperty(name = "jwt.secret")
+    String secretKey;
 
-    @Value("${jwt.expiration}") // Durée d'expiration du token (en millisecondes). Par exemple : 86400000 pour 1 jour.
-    private long expiration;
+    @ConfigProperty(name = "jwt.expiration")
+    long expiration;
+
+    @Inject
+    JWTParser jwtParser;
+
+    @Inject
+    JsonWebToken jwt;
+
+    @Inject
+    Logger log;
 
     public String generateToken(String username) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration);
+        Instant now = Instant.now();
+        JwtClaimsBuilder claims = Jwt.claims()
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(expiration / 1000))
+                .subject(username);
 
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS256, secretKey)
-                .compact();
-    }
-
-    public String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && !(authentication.getPrincipal() instanceof String)) {
-            String jwtToken = ((UserDetails) authentication.getPrincipal()).getUsername();
-            return getUsernameFromToken(jwtToken);
-        }
-        return null;
+        return claims.sign();
     }
 
     public String getUsernameFromToken(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey(secretKey)
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.getSubject();
-        } catch (MalformedJwtException e) {
-            // Handle the exception as needed
+            return jwtParser.parse(token).getSubject();
+        } catch (ParseException e) {
+            log.error("Invalid JWT token", e);
             throw new RuntimeException("Invalid JWT token", e);
         }
     }
 
     public boolean validateToken(String token, String username) {
-        String tokenUsername = getUsernameFromToken(token);
-        return (tokenUsername.equals(username) && !isTokenExpired(token));
+        try {
+            String tokenUsername = getUsernameFromToken(token);
+            return tokenUsername.equals(username) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token) {
-        Date expirationDate = Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
+        try {
+            Long expirationDate = Date.from(jwtParser.parse(token).getExpirationTime());
+            return expirationDate.before(new Date());
+        } catch (ParseException e) {
+            log.error("Invalid JWT token", e);
+            return true;
+        }
+    }
 
-        return expirationDate.before(new Date());
+    public String getCurrentUsername() {
+        if (jwt != null && jwt.getSubject() != null) {
+            return jwt.getSubject();
+        }
+        return null;
     }
 }

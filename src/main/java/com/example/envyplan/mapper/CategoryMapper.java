@@ -4,57 +4,25 @@ import com.example.envyplan.dto.CategoryDto;
 import com.example.envyplan.model.Category;
 import com.example.envyplan.repository.EnvyRepository;
 import com.example.envyplan.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import org.mapstruct.*;
+import jakarta.inject.Inject;
+import java.util.List;
 import java.util.stream.Collectors;
 
-public class CategoryMapper {
-    @Autowired
-    private static UserRepository userRepository;
+@Mapper(componentModel = "cdi", uses = {EnvyMapper.class})
+public abstract class CategoryMapper {
 
-    @Autowired
-    private static EnvyRepository envyRepository;
+    @Inject
+    protected UserRepository userRepository;
 
-    public static CategoryDto toDTO(Category category) {
-        if (category == null) {
-            return null;
-        }
+    @Inject
+    protected EnvyRepository envyRepository;
 
-        CategoryDto dto = new CategoryDto();
-        dto.setId(category.getId());
-        dto.setNameCategory(category.getNameCategory());
-        dto.setPlaceCategory(category.getPlaceCategory());
-        dto.setDateCategoryStart(category.getDateCategoryStart());
-        dto.setDateCategoryEnd(category.getDateCategoryEnd());
-        dto.setOwnerId(category.getOwner().getId());
+    @Mapping(target = "ownerId", expression = "java(category.getOwner() != null ? category.getOwner().getId() : null)")
+    @Mapping(target = "envyList", expression = "java(category.getEnvyList() != null ? category.getEnvyList().stream().map(envy -> envy.getId()).collect(Collectors.toList()) : null)")
+    public abstract CategoryDto toDTO(Category category);
 
-        dto.setEnvyList(category.getEnvyList().stream()
-                .map(EnvyMapper::toDTO)
-                .collect(Collectors.toList()));
-
-        return dto;
-    }
-
-    public static Category toEntity(CategoryDto dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        Category category = new Category();
-        category.setId(dto.getId());
-        category.setNameCategory(dto.getNameCategory());
-        category.setPlaceCategory(dto.getPlaceCategory());
-        category.setDateCategoryStart(dto.getDateCategoryStart());
-        category.setDateCategoryEnd(dto.getDateCategoryEnd());
-        // Fetch and set the actual User entity
-        category.setOwner(userRepository.findById(dto.getOwnerId()).orElse(null));
-
-        // Fetch and set the actual Envy entities
-        if (dto.getEnvyList() != null) {
-            category.setEnvyList(dto.getEnvyList().stream()
-                    .map(envyId -> envyRepository.findById(Long.valueOf(String.valueOf(envyId))).orElse(null))
-                    .collect(Collectors.toList()));
-        }
-        return category;
-    }
+    @Mapping(target = "owner", expression = "java(dto.getOwnerId() != null ? userRepository.findById(dto.getOwnerId()).orElse(null) : null)")
+    @Mapping(target = "envyList", expression = "java(dto.getEnvyList() != null ? dto.getEnvyList().stream().map(id -> envyRepository.findById(id).orElse(null)).collect(Collectors.toList()) : null)")
+    public abstract Category toEntity(CategoryDto dto);
 }

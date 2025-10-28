@@ -1,54 +1,53 @@
 package com.example.envyplan.mapper;
-
 import com.example.envyplan.dto.EnvyDto;
+import com.example.envyplan.model.Category;
 import com.example.envyplan.model.Envy;
 import com.example.envyplan.model.Type;
+import com.example.envyplan.model.User;
 import com.example.envyplan.repository.CategoryRepository;
 import com.example.envyplan.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.mapstruct.*;
+import org.mapstruct.factory.Mappers;
 
-public class EnvyMapper {
-    @Autowired
-    private static UserRepository userRepository;
+@ApplicationScoped
+@Mapper(componentModel = "cdi")
+public abstract class EnvyMapper {
 
-    @Autowired
-    private static CategoryRepository categoryRepository;
-    public static EnvyDto toDTO(Envy envy) {
-        if (envy == null) {
-            return null;
-        }
+    @Inject
+    protected UserRepository userRepository;
 
-        EnvyDto dto = new EnvyDto();
-        dto.setId(envy.getId());
-        dto.setNameEnvy(envy.getNameEnvy());
-        dto.setPlaceEnvy(envy.getPlaceEnvy());
-        dto.setDescription(envy.getDescription());
-        dto.setTypeEnvy(envy.getTypeEnvy().name());
-        dto.setDateEnvyStart(envy.getDateEnvyStart());
-        dto.setDateEnvyEnd(envy.getDateEnvyEnd());
-        dto.setOwnerId(envy.getOwner().getId());
-        dto.setCategoryId(envy.getCategory().getId());
+    @Inject
+    protected CategoryRepository categoryRepository;
 
-        return dto;
+    public static final EnvyMapper INSTANCE = Mappers.getMapper(EnvyMapper.class);
+
+    @Mapping(source = "owner.id", target = "ownerId")
+    @Mapping(source = "category.id", target = "categoryId")
+    @Mapping(source = "typeEnvy", target = "typeEnvy", qualifiedByName = "typeToString")
+    public abstract EnvyDto toDTO(Envy envy);
+
+    @Mapping(target = "owner", expression = "java(envyMapper.resolveUser(dto.getOwnerId()))")
+    @Mapping(target = "category", expression = "java(envyMapper.resolveCategory(dto.getCategoryId()))")
+    @Mapping(target = "typeEnvy", source = "typeEnvy", qualifiedByName = "stringToType")
+    public abstract Envy toEntity(EnvyDto dto, @Context EnvyMapper envyMapper);
+
+    @Named("typeToString")
+    public String typeToString(Type type) {
+        return type != null ? type.name() : null;
     }
 
-    public static Envy toEntity(EnvyDto dto) {
-        if (dto == null) {
-            return null;
-        }
+    @Named("stringToType")
+    public Type stringToType(String type) {
+        return type != null ? Type.valueOf(type) : null;
+    }
 
-        Envy envy = new Envy();
-        envy.setId(dto.getId());
-        envy.setNameEnvy(dto.getNameEnvy());
-        envy.setPlaceEnvy(dto.getPlaceEnvy());
-        envy.setDescription(dto.getDescription());
-        envy.setTypeEnvy(Type.valueOf(dto.getTypeEnvy()));
-        envy.setDateEnvyStart(dto.getDateEnvyStart());
-        envy.setDateEnvyEnd(dto.getDateEnvyEnd());
-        // Fetch and set the actual User and Category entities
-        envy.setOwner(userRepository.findById(dto.getOwnerId()).orElse(null));
-        envy.setCategory(categoryRepository.findById(dto.getCategoryId()).orElse(null));
+    public User resolveUser(Long id) {
+        return id != null ? userRepository.findById(id).orElse(null) : null;
+    }
 
-        return envy;
+    public Category resolveCategory(Long id) {
+        return id != null ? categoryRepository.findById(id) : null;
     }
 }

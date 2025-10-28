@@ -1,18 +1,35 @@
 package com.example.envyplan.repository;
 
 import com.example.envyplan.model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.Optional;
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
-    Optional<User> findById(String id);
-    Optional<User> findByUsernameOrEmail(String username, String email);
-    User findByUsername(String username);
-    Boolean existsByUsername(String username);
-    Boolean existsByEmail(String email);
+@ApplicationScoped
+public class UserRepository implements PanacheRepository<User> {
 
+    public Optional<User> findByEmail(String email) {
+        return find("email", email).firstResultOptional();
+    }
+
+    public Optional<User> findById(Long id) {
+        return findByIdOptional(id);
+    }
+
+    public Optional<User> findByUsernameOrEmail(String username, String email) {
+        return find("username = ?1 or email = ?2", username, email).firstResultOptional();
+    }
+
+    public User findByUsername(String username) {
+        return find("username", username).firstResult();
+    }
+
+    public boolean existsByUsername(String username) {
+        return count("username", username) > 0;
+    }
+
+    public boolean existsByEmail(String email) {
+        return count("email", email) > 0;
+    }
 }
